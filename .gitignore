@@ -1,3 +1,4 @@
 video-generation/output/
 *.mp4
 .env
+.env.example
