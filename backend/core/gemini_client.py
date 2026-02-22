@@ -1,7 +1,7 @@
 import os
 import time
 import random
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -17,10 +17,9 @@ if not AVAILABLE_KEYS:
 # We only include the models your dashboard shows have active free quotas
 AVAILABLE_MODELS = [
     'gemini-2.5-flash-lite', # 10 RPM limit
-    'gemini-2.5-flash',       # 5 RPM limit
+    'gemini-2.5-flash',      # 5 RPM limit
     'gemini-2.0-flash',
     'gemini-3.0-flash'
-
 ]
 
 def call_gemini(prompt: str) -> str:
@@ -36,13 +35,17 @@ def call_gemini(prompt: str) -> str:
 
     for attempt in range(max_retries):
         for key_index, current_key in enumerate(AVAILABLE_KEYS):
-            genai.configure(api_key=current_key)
+            # NEW SDK SYNTAX: Initialize the Client
+            client = genai.Client(api_key=current_key)
             key_name = "Primary Key" if key_index == 0 else f"Alternate Key {key_index}"
 
             for model_name in models_to_try:
                 try:
-                    model = genai.GenerativeModel(model_name)
-                    response = model.generate_content(prompt)
+                    # NEW SDK SYNTAX: Call generate_content via client.models
+                    response = client.models.generate_content(
+                        model=model_name,
+                        contents=prompt
+                    )
                     return response.text
                     
                 except Exception as e:
