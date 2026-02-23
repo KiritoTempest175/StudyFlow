@@ -143,10 +143,11 @@ PDF Text ──▶ Gemini (Script) ──▶ Asset Service ──▶ Video Engin
 
 ```
 ICAT-2026/
+├── start.bat                         # ⚡ One-click launcher (venv + install + run all)
 ├── backend/                          # Python FastAPI Backend
 │   ├── main.py                       # Main API server (port 8000)
 │   ├── requirements.txt              # Python dependencies
-│   ├── .env.example                  # Environment variable template
+│   ├── .env                          # ⚠️ YOU MUST CREATE THIS (see setup below)
 │   ├── core/
 │   │   ├── gemini_client.py          # Gemini AI client with multi-model fallback
 │   │   ├── file_handler.py           # File processing utilities
@@ -202,11 +203,12 @@ ICAT-2026/
 │   │   ├── types/                    # TypeScript type definitions
 │   │   └── utils/
 │   │       └── generateVideo.ts      # Remotion render pipeline
-│   ├── output/                       # Rendered MP4 output directory
+│   ├── output/                       # Rendered MP4 output directory (git-ignored)
 │   ├── remotion.config.ts            # Remotion configuration
 │   ├── package.json
 │   └── tsconfig.json
 │
+├── .gitignore
 └── README.md                         # ← You are here
 ```
 
@@ -216,95 +218,120 @@ ICAT-2026/
 
 ### Prerequisites
 
-| Requirement | Version |
-|-------------|---------|
-| **Python** | 3.10 or higher |
-| **Node.js** | 18 or higher |
-| **npm** | 9 or higher |
-| **Google Gemini API Key** | [Get one here](https://aistudio.google.com/apikey) |
+| Requirement | Version | Link |
+|-------------|---------|------|
+| **Python** | 3.10 or higher | [python.org](https://www.python.org/downloads/) |
+| **Node.js** | 18 or higher | [nodejs.org](https://nodejs.org/) |
+| **npm** | 9 or higher | Included with Node.js |
+| **Google Gemini API Key** | — | [Get one here](https://aistudio.google.com/apikey) |
 
-### 1. Backend (FastAPI + Python)
+### ⚠️ Step 1: Create Your API Key File
+
+This project uses Google Gemini AI. The `.env` file containing API keys is **not included in the repository** for security reasons — you must create it yourself.
+
+1. Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
+2. Create a new file called `.env` inside the `backend/` folder
+3. Add your key(s):
+
+```env
+# backend/.env
+GEMINI_API_KEY=your_api_key_here
+ALT_KEY=optional_backup_key_here
+```
+
+> **Note:** `ALT_KEY` is optional but recommended. The app uses both keys for load-balancing across Gemini's rate limits.
+
+> **⛔ Never commit your `.env` file to Git.** It is already listed in `.gitignore`.
+
+### ⚡ Step 2: One-Click Launch (Windows)
+
+The easiest way to get everything running:
 
 ```bash
-# Navigate to backend
-cd backend
+# 1. Clone the repository
+git clone https://github.com/KiritoTempest175/StudyFlow.git
+cd StudyFlow
 
-# Create and activate virtual environment (recommended)
+# 2. Create backend/.env with your API key (see Step 1 above)
+
+# 3. Double-click start.bat  (or run from terminal)
+start.bat
+```
+
+`start.bat` will automatically:
+1. Create a Python virtual environment (if one doesn't exist)
+2. Install all Python dependencies from `backend/requirements.txt`
+3. Install Node.js dependencies for `frontend/` and `video-generation/`
+4. Launch **all four services** in separate terminal windows
+
+> After launch, open **http://localhost:3000** in your browser.
+
+### 🔧 Manual Setup (Step-by-Step)
+
+<details>
+<summary>Click to expand manual setup instructions</summary>
+
+#### 1. Backend (FastAPI + Python)
+
+```bash
+# Create and activate virtual environment
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # macOS/Linux
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 
-# Configure environment
-copy .env.example .env       # Windows
-# cp .env.example .env       # macOS/Linux
-
-# Edit .env and add your Gemini API key
+# Create backend/.env and add your Gemini API key
 # GEMINI_API_KEY=your_key_here
 
 # Start the backend server
+cd backend
 python main.py
 ```
 
 > ✅ Backend will be available at **http://127.0.0.1:8000**
 
-### 2. Asset Microservice (TTS + Keywords)
+#### 2. Asset Microservice (TTS + Keywords)
 
 ```bash
-# Navigate to the asset service (still inside backend/)
+# From the project root (same venv)
 cd backend
-
-# Install additional dependencies for the asset service
-pip install keybert gtts mutagen
-
-# Start the asset microservice
-python members/member3/service.py
+python -m members.member3.service
 ```
 
 > ✅ Asset service will be available at **http://127.0.0.1:5000**
 
-### 3. Video Generation Service (Remotion)
+#### 3. Video Generation Service (Remotion)
 
 ```bash
-# Navigate to video generation
 cd video-generation
-
-# Install dependencies
 npm install
-
-# Start the video rendering server
 npm run server
 ```
 
 > ✅ Video engine will be available at **http://127.0.0.1:3001**
 
-### 4. Frontend (Next.js)
+#### 4. Frontend (Next.js)
 
 ```bash
-# Navigate to frontend
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
 ```
 
 > ✅ Frontend will be available at **http://localhost:3000**
 
-### 🎉 Quick Launch (All Services)
+</details>
 
-Open **four separate terminals** and run each service:
+### Service Summary
 
-| Terminal | Directory | Command |
-|----------|-----------|---------|
-| 1 | `backend/` | `python main.py` |
-| 2 | `backend/` | `python members/member3/service.py` |
-| 3 | `video-generation/` | `npm run server` |
-| 4 | `frontend/` | `npm run dev` |
+| Service | Port | Command |
+|---------|------|---------|
+| Backend API | `8000` | `python main.py` |
+| Asset Microservice | `5000` | `python -m members.member3.service` |
+| Video Engine | `3001` | `npm run server` |
+| Frontend | `3000` | `npm run dev` |
 
 ---
 
@@ -449,14 +476,20 @@ Renders an MP4 video using Remotion with the provided script, audio, and images.
 
 ## 🔐 Environment Variables
 
-### Backend (`backend/.env`)
+> **⚠️ Important:** The `.env` file is **not included** in the repository. It was intentionally removed and git-ignored to protect API keys.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GEMINI_API_KEY` | ✅ | Primary Google Gemini API key |
-| `ALT_KEY` | ❌ | Alternate API key for load balancing |
+You must create `backend/.env` manually after cloning:
 
-Get your API key at: [https://aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+```env
+# backend/.env  — create this file yourself
+GEMINI_API_KEY=your_primary_key_here
+ALT_KEY=your_optional_backup_key
+```
+
+| Variable | Required | Description | How to Get |
+|----------|----------|-------------|------------|
+| `GEMINI_API_KEY` | ✅ | Primary Google Gemini API key | [Google AI Studio](https://aistudio.google.com/apikey) |
+| `ALT_KEY` | ❌ | Alternate key for load balancing (reduces rate-limit errors) | Same link above |
 
 ---
 
@@ -466,12 +499,14 @@ Get your API key at: [https://aistudio.google.com/apikey](https://aistudio.googl
 | Technology | Purpose |
 |-----------|---------|
 | [FastAPI](https://fastapi.tiangolo.com/) | High-performance Python web framework |
-| [Google Gemini AI](https://ai.google.dev/) | LLM for summarization, chat, quiz, and flashcard generation |
+| [Google GenAI SDK](https://pypi.org/project/google-genai/) | `google-genai` — Gemini AI for summarization, chat, quiz, and flashcard generation |
 | [PyPDF](https://pypdf.readthedocs.io/) | PDF text extraction |
+| [pdfplumber](https://github.com/jsvine/pdfplumber) | Advanced PDF text extraction with header/footer cropping |
 | [gTTS](https://gtts.readthedocs.io/) | Google Text-to-Speech audio generation |
 | [KeyBERT](https://maartengr.github.io/KeyBERT/) | Keyword extraction using BERT embeddings |
 | [TextBlob](https://textblob.readthedocs.io/) | Natural language processing utilities |
 | [TextStat](https://pypi.org/project/textstat/) | Text readability analysis |
+| [Mutagen](https://mutagen.readthedocs.io/) | MP3 audio duration detection |
 
 ### Frontend
 | Technology | Purpose |

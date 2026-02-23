@@ -1,4 +1,17 @@
-video-generation/output/
-*.mp4
+# Environment / Secrets
 .env
-.env.example
+.env.*
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Output / Media
+video-generation/output/
+backend/media/
+backend/storage/
+*.mp4
