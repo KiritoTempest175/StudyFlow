@@ -12,6 +12,7 @@ export default function VideoPlayer({ videoData, loading }: VideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showFullScript, setShowFullScript] = useState(false);
 
   if (loading) {
     return (
@@ -173,18 +174,22 @@ export default function VideoPlayer({ videoData, loading }: VideoPlayerProps) {
 
       {/* Script/Info Panel */}
       {videoData.script && (
-        <div className="bg-dark-card border border-dark-border rounded-xl p-4 max-h-48 overflow-y-auto">
+        <div className={`bg-dark-card border border-dark-border rounded-xl p-4 ${showFullScript ? '' : 'max-h-48'} overflow-y-auto`}>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold text-sm">Video Script</h4>
-            <button className="text-xs text-primary-400 hover:text-primary-300">
-              View Full Script
+            <button
+              onClick={() => setShowFullScript(!showFullScript)}
+              className="text-xs text-primary-400 hover:text-primary-300"
+            >
+              {showFullScript ? 'Show Less' : 'View Full Script'}
             </button>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
-            {videoData.script.substring(0, 200)}...
+            {showFullScript ? videoData.script : `${videoData.script.substring(0, 200)}...`}
           </p>
         </div>
       )}
     </div>
   );
 }
+

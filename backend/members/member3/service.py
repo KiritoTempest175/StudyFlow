@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from keybert import KeyBERT
-from gtts import gTTS
+import edge_tts
+import asyncio
 from mutagen.mp3 import MP3
 import os
 import uuid
@@ -36,13 +37,13 @@ def generate_assets(request: VideoRequest):
     if not full_script:
         raise HTTPException(status_code=400, detail="No text provided")
     
-    print("Generating Full Audio via gTTS...")
+    print("Generating Full Audio via Edge-TTS...")
     audio_filename = f"{uuid.uuid4()}.mp3"
     filepath = os.path.join(MEDIA_FOLDER, audio_filename)
     
-    # Generate ONE full audio file for the Remotion player
-    tts = gTTS(text=full_script, lang='en', slow=False)
-    tts.save(filepath)
+    # Generate ONE full audio file for the Remotion player using Edge-TTS neural voice
+    communicate = edge_tts.Communicate(full_script, "en-US-AriaNeural")
+    asyncio.run(communicate.save(filepath))
     audio_url = f"http://127.0.0.1:5000/media/{audio_filename}"
 
     # Measure the actual MP3 duration so the video engine can match it
